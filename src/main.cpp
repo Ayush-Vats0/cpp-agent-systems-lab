@@ -3,24 +3,22 @@
 // Represents the environment in which our agent operates.
 
 class Environment
-
 {
+private:
+    int position = 0;    // The environment's internal state.
 
 public:
+    int observe() const
+    {
+        return position;    // Give the agent the current state as an observation.
+    }
 
-// Returns an observation describing the current environment state.
+    void act(int action)
+    {
+        position += action; // Apply the agent's action to the environment.
 
-int observe() const
-{
-    return 0; // Observation 0 means "nothing special detected".
-}
- 
-// Applies an action selected by the agent to the environment.
-
-void act(int action)
-{
-        std::cout << "Environment received action: "
-                  << action
+        std::cout << "Position: "
+                  << position
                   << '\n';
     }
 };
