@@ -43,18 +43,17 @@ public:
 
 int main()
 {
-    Environment environment;   // Creates an Environment object.
-    Agent agent;                // Creates an Agent object.
+    Environment environment;
+    Agent agent;
 
-    int observation = environment.observe();
-    // The agent obtains information from its environment.
+    for (int step = 0; step < 5; ++step)  //creating for loop for continuous iteration & changes to the env state via agent
+    {
+        int observation = environment.observe();
 
-    int action = agent.decide(observation);
-    // The agent processes the observation and selects an action.
+        int action = agent.decide(observation);
 
-    environment.act(action);
-    // The selected action is sent back to the environment.
+        environment.act(action);
+    }
 
     return 0;
-    // Returning 0 conventionally indicates successful program termination.
 }
