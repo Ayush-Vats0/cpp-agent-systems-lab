@@ -27,11 +27,14 @@ public:
 // Represents the agent that observes the environment and selects actions.
 class Agent
 {
+private:
+    int goal = 3;   //agent's goal
+
 public:
     // Receives an observation and decides what action should be taken.
     int decide(int observation) const
     {
-        if (observation == 0)
+        if (observation < goal)    //agent now has current state + goal + decision policy
         {
             return 1;    // If nothing special is observed, choose action 1.
         }
