@@ -38,7 +38,7 @@ public:
 class Agent
 {
 private:
-    int goal = 5;   //agent's goal
+    int goal = 3;   //agent's goal
 
 public:
     // Receives an observation and decides what action should be taken.
