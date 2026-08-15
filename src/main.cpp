@@ -6,6 +6,7 @@ class Environment
 {
 private:
     int position = 0;    // The environment's internal state.
+    int  max_position = 3;
 
 public:
     int observe() const
@@ -13,13 +14,22 @@ public:
         return position;    // Give the agent the current state as an observation.
     }
 
-    void act(int action)
+    bool act(int action)
     {
-        position += action; // Apply the agent's action to the environment.
+        int new_position = position + action; // Introducing a constrain in the environment as an obstacle to the goal evaluation of the agent.
+
+        if (new_position > max_position)
+        {
+          return false;
+        }
+
+        position = new_position;
 
         std::cout << "Position: "
                   << position
                   << '\n';
+
+        return true;
     }
 };
 
@@ -28,7 +38,7 @@ public:
 class Agent
 {
 private:
-    int goal = 3;   //agent's goal
+    int goal = 5;   //agent's goal
 
 public:
     // Receives an observation and decides what action should be taken.
@@ -67,7 +77,14 @@ int main()
 
         int action = agent.decide(observation);
 
-        environment.act(action);
+        bool action_sucess = environment.act(action);    //changing the orchestration of the agent's actions to deal with an environmental constrain
+
+        if (!action_sucess)
+        {
+             std::cout << "Action failed, Goal cannot be reached.\n";
+             break;
+        }
+
     }
 
     return 0;
