@@ -41,6 +41,10 @@ public:
 
         return 0;        // Otherwise choose action 0.
     }
+    bool IsgoalReached(int observation) const          //added a goal evaluation function to make the decision making explicit
+    {
+           return observation >= goal; //independently goal reached state; termination
+    }
 };
 
 
@@ -49,9 +53,17 @@ int main()
     Environment environment;
     Agent agent;
 
-    for (int step = 0; step < 5; ++step)  //creating for loop for continuous iteration & changes to the env state via agent
+    // the for loop has inbuilt default termination mechanism, the limit 100 protects it against any bug that can make it run indefinitely
+
+    for (int step = 0; step < 100; ++step)  //creating for loop for continuous iteration & changes to the env state via agent
     {
         int observation = environment.observe();
+
+        if (agent.IsgoalReached(observation))
+        {
+           std::cout << "Goal Reached!\n";          //goal evaluation break
+           break;
+        }
 
         int action = agent.decide(observation);
 
