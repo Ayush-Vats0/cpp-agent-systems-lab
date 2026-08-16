@@ -1,5 +1,12 @@
 #include <iostream> //Provides std::cout for writing text to standard output.
 
+enum class Action      //making action type explicit
+{
+    MoveLeft,
+    MoveRight,
+    Wait
+};
+
 // Represents the environment in which our agent operates.
 
 class Environment
@@ -14,11 +21,26 @@ public:
         return position;    // Give the agent the current state as an observation.
     }
 
-    bool act(int action)
+    bool act(Action action)
     {
-        int new_position = position + action; // Introducing a constrain in the environment as an obstacle to the goal evaluation of the agent.
+        int movement = 0;
 
-        if (new_position > max_position)
+        if (action == Action::MoveLeft)    //Translating action into an environmental effect; env owns the interpretation of actions
+        {
+           movement = -1;
+        }
+        else if (action == Action::MoveRight)
+        {
+           movement = 1;
+        }
+        else if (action == Action::Wait)
+        {
+           movement = 0;
+        }
+
+        int new_position = position + movement; // Introducing a constrain in the environment as an obstacle to the goal evaluation of the agent.
+
+        if (new_position < 0 || new_position > max_position)
         {
           return false;
         }
@@ -42,14 +64,14 @@ private:
 
 public:
     // Receives an observation and decides what action should be taken.
-    int decide(int observation) const
+    Action decide(int observation) const
     {
-        if (observation < goal)    //agent now has current state + goal + decision policy
+        if (observation < goal)    //agent now has current state + goal + decision policy; agent to select from action space
         {
-            return 1;    // If nothing special is observed, choose action 1.
+            return Action::MoveRight;    // changeing action from simple integers to something concrete || !(If nothing special is observed, choose action 1)
         }
 
-        return 0;        // Otherwise choose action 0.
+        return Action::Wait;        // choose wait and not an integer || !(Otherwise choose action 0)
     }
     bool IsgoalReached(int observation) const          //added a goal evaluation function to make the decision making explicit
     {
@@ -75,7 +97,7 @@ int main()
            break;
         }
 
-        int action = agent.decide(observation);
+        Action action = agent.decide(observation);   //changing int to conrete definable action in this iteration
 
         bool action_sucess = environment.act(action);    //changing the orchestration of the agent's actions to deal with an environmental constrain
 
