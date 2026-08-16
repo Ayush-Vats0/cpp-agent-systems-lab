@@ -12,7 +12,7 @@ enum class Action      //making action type explicit
 class Environment
 {
 private:
-    int position = 0;    // The environment's internal state.
+    int position = 2;    // The environment's internal state.
     int  max_position = 3;
 
 public:
@@ -60,22 +60,26 @@ public:
 class Agent
 {
 private:
-    int goal = 3;   //agent's goal
+    int goal = 0;   //agent's goal
 
 public:
     // Receives an observation and decides what action should be taken.
     Action decide(int observation) const
     {
-        if (observation < goal)    //agent now has current state + goal + decision policy; agent to select from action space
+        if (observation < goal)    //agent now can choose from multiple actions from action space; agent now has current state + goal + decision policy; agent to select from action space
         {
             return Action::MoveRight;    // changeing action from simple integers to something concrete || !(If nothing special is observed, choose action 1)
+        }
+        else if (observation > goal)
+        {
+            return Action::MoveLeft;
         }
 
         return Action::Wait;        // choose wait and not an integer || !(Otherwise choose action 0)
     }
     bool IsgoalReached(int observation) const          //added a goal evaluation function to make the decision making explicit
     {
-           return observation >= goal; //independently goal reached state; termination
+           return observation == goal; //independently goal reached state; termination
     }
 };
 
