@@ -12,8 +12,9 @@ enum class Action      //making action type explicit
 class Environment
 {
 private:
-    int position = 2;    // The environment's internal state.
-    int  max_position = 3;
+    int position = 0;    // The environment's internal state.
+    int max_position = 3;
+    int obstacle_position = 2; //introducing an obstacle in the environment for the agent
 
 public:
     int observe() const
@@ -40,7 +41,7 @@ public:
 
         int new_position = position + movement; // Introducing a constrain in the environment as an obstacle to the goal evaluation of the agent.
 
-        if (new_position < 0 || new_position > max_position)
+        if (new_position < 0 || new_position > max_position || new_position == obstacle_position)  //added the validation check for the obstacle
         {
           return false;
         }
@@ -60,7 +61,7 @@ public:
 class Agent
 {
 private:
-    int goal = 0;   //agent's goal
+    int goal = 5;   //agent's goal
 
 public:
     // Receives an observation and decides what action should be taken.
