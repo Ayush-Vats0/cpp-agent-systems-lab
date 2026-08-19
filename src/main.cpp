@@ -188,26 +188,23 @@ int main()
     }
 
             Position current = environment.observe();
+
             Position result;
 
           std::cout << "Real position before tests: ("
                     << current.horizontal << ", "
                     << current.vertical << ")\n";
 
-             bool valid = environment.tryMove(
-             current,
-    Action::MoveRight,
-    result
-);
+             bool valid = environment.tryMove(current, Action::MoveRight, result);
 
-std::cout << "MoveRight valid: " << valid << "\n";
-std::cout << "Hypothetical result: ("
-          << result.horizontal << ", "
-          << result.vertical << ")\n";
+          std::cout << "MoveRight valid: " << valid << "\n";
+          std::cout << "Hypothetical result: ("
+                    << result.horizontal << ", "
+                    << result.vertical << ")\n";
 
-std::cout << "Real position after test: ("
-          << environment.observe().horizontal << ", "
-          << environment.observe().vertical << ")\n";
+          std::cout << "Real position after test: ("
+                    << environment.observe().horizontal << ", "
+                    << environment.observe().vertical << ")\n";
 
     return 0;
 }
