@@ -28,6 +28,52 @@ public:
         return position;    // Give the agent the current state as an observation.
     }
 
+    bool tryMove(Position state, Action action, Position& next_state)
+    {
+
+         next_state = state;
+
+         if (action == Action::MoveLeft)
+         {
+             next_state.vertical--;
+         }
+         else if (action == Action::MoveRight)
+         {
+             next_state.vertical++;
+         }
+         else if (action == Action::MoveUp)
+         {
+             next_state.horizontal--;
+         }
+         else if (action == Action::MoveDown)
+         {
+             next_state.horizontal++;
+         }
+         else if (action == Action::Wait)
+         {
+             // No change.
+         }
+
+        if (next_state.horizontal < 0 ||
+            next_state.horizontal > 2 ||
+            next_state.vertical < 0 ||
+            next_state.vertical > 2)
+         {
+
+             return false;
+
+         }
+
+       if (next_state.horizontal == 1 &&
+           next_state.vertical == 1)
+         {
+             return false;
+         }
+
+       return true;
+
+    }
+
     bool act(Action action)
     {
         Position new_position = position;
@@ -140,6 +186,28 @@ int main()
         }
 
     }
+
+            Position current = environment.observe();
+            Position result;
+
+          std::cout << "Real position before tests: ("
+                    << current.horizontal << ", "
+                    << current.vertical << ")\n";
+
+             bool valid = environment.tryMove(
+             current,
+    Action::MoveRight,
+    result
+);
+
+std::cout << "MoveRight valid: " << valid << "\n";
+std::cout << "Hypothetical result: ("
+          << result.horizontal << ", "
+          << result.vertical << ")\n";
+
+std::cout << "Real position after test: ("
+          << environment.observe().horizontal << ", "
+          << environment.observe().vertical << ")\n";
 
     return 0;
 }
