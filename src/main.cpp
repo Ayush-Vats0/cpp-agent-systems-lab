@@ -1,4 +1,5 @@
 #include <iostream> //Provides std::cout for writing text to standard output.
+#include <queue> //Provides std::queue for creatig queues.
 
 struct Position    //adding a structure to simulate planning in the agent and take the whole system to a 2D world
 {
@@ -28,10 +29,12 @@ public:
         return position;    // Give the agent the current state as an observation.
     }
 
-    bool tryMove(Position state, Action action, Position& next_state)
+    bool tryMove(Position state, Action action, Position& next_state) //simulator to understand possibility by the agent
     {
 
          next_state = state;
+
+          //to  translate action into hypothetical movement
 
          if (action == Action::MoveLeft)
          {
@@ -53,6 +56,8 @@ public:
          {
              // No change.
          }
+
+        //obstacle validation
 
         if (next_state.horizontal < 0 ||
             next_state.horizontal > 2 ||
@@ -155,11 +160,12 @@ public:
     { 
            return observation.horizontal == goal.horizontal && observation.vertical == goal.vertical; //independently goal reached state; termination
     }
-};
-
+  };
 
 int main()
-{
+
+    {
+
     Environment environment;
     Agent agent;
 
@@ -187,24 +193,19 @@ int main()
 
     }
 
-            Position current = environment.observe();
+    std::queue<Position> frontier; //creating a queue object
 
-            Position result;
+    bool visited[3][3] = {}; //creating a primitive visited array that can track the bfs search discovery.
 
-          std::cout << "Real position before tests: ("
-                    << current.horizontal << ", "
-                    << current.vertical << ")\n";
+    Position start = environment.observe();
 
-             bool valid = environment.tryMove(current, Action::MoveRight, result);
+    visited[start.horizontal][start.vertical] = true;
 
-          std::cout << "MoveRight valid: " << valid << "\n";
-          std::cout << "Hypothetical result: ("
-                    << result.horizontal << ", "
-                    << result.vertical << ")\n";
+    frontier.push(start);
 
-          std::cout << "Real position after test: ("
-                    << environment.observe().horizontal << ", "
-                    << environment.observe().vertical << ")\n";
+    Position current = frontier.front();
 
-    return 0;
+    frontier.pop();
+
+           return 0;
 }
