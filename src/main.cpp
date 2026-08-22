@@ -1,5 +1,6 @@
 #include <iostream> //Provides std::cout for writing text to standard output.
 #include <queue> //Provides std::queue for creatig queues.
+#include <vector> 
 
 struct Position    //adding a structure to simulate planning in the agent and take the whole system to a 2D world
 {
@@ -205,7 +206,44 @@ int main()
 
     Position current = frontier.front();
 
+    std::vector<Action> actions =
+    {
+    Action::MoveLeft,
+    Action::MoveRight,
+    Action::MoveUp,
+    Action::MoveDown,
+    Action::Wait
+    };
+
+    for (Action action : actions)
+    {
+
+         Position next_state;
+
+         bool valid = environment.tryMove(current, action, next_state);
+
+        if (valid && !visited[next_state.horizontal][next_state.vertical])
+        {
+
+            visited[next_state.horizontal][next_state.vertical] = true;
+            frontier.push(next_state);
+        }
+
+     }
+
     frontier.pop();
+
+    Position next_state;
+
+    bool valid = environment.tryMove(current, Action::MoveRight, next_state);
+
+    if (valid && !visited[next_state.horizontal][next_state.vertical])
+    {
+
+    visited[next_state.horizontal][next_state.vertical] = true;
+    frontier.push(next_state);
+
+    }
 
            return 0;
 }
