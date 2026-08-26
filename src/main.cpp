@@ -204,19 +204,22 @@ int main()
 
     frontier.push(start);
 
-    Position current = frontier.front();
-
-    std::vector<Action> actions =
+    while(!frontier.empty())  //putting bfs to action
     {
-    Action::MoveLeft,
-    Action::MoveRight,
-    Action::MoveUp,
-    Action::MoveDown,
-    Action::Wait
-    };
 
-    for (Action action : actions)
-    {
+       Position current = frontier.front();
+
+       std::vector<Action> actions =
+       {
+         Action::MoveLeft,
+         Action::MoveRight,
+         Action::MoveUp,
+         Action::MoveDown,
+         Action::Wait
+      };
+
+     for (Action action : actions)
+     {
 
          Position next_state;
 
@@ -229,21 +232,11 @@ int main()
             frontier.push(next_state);
         }
 
-     }
-
-    frontier.pop();
-
-    Position next_state;
-
-    bool valid = environment.tryMove(current, Action::MoveRight, next_state);
-
-    if (valid && !visited[next_state.horizontal][next_state.vertical])
-    {
-
-    visited[next_state.horizontal][next_state.vertical] = true;
-    frontier.push(next_state);
+      }
 
     }
+
+    frontier.pop();
 
            return 0;
 }
