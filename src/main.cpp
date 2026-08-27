@@ -1,6 +1,7 @@
 #include <iostream> //Provides std::cout for writing text to standard output.
 #include <queue> //Provides std::queue for creatig queues.
-#include <vector> 
+#include <vector> //helps storing values dynamically that are found by the bfs
+#include <algorithm> //to reverse the path provided by the recorder
 
 struct Position    //adding a structure to simulate planning in the agent and take the whole system to a 2D world
 {
@@ -155,8 +156,15 @@ public:
             return Action::MoveUp;
         }
 
-        return Action::Wait;        // choose wait and not a position || !(Otherwise choose action)
+            return Action::Wait;        // choose wait and not a position || !(Otherwise choose action)
     }
+
+    bool isGoal(Position state)   //added a goal
+    {
+             return state.horizontal == 2 &&
+             state.vertical == 2;
+    }
+
     bool IsgoalReached(Position observation) const          //added a goal evaluation function to make the decision making explicit
     { 
            return observation.horizontal == goal.horizontal && observation.vertical == goal.vertical; //independently goal reached state; termination
@@ -170,7 +178,7 @@ int main()
     Environment environment;
     Agent agent;
 
-    // the for loop has inbuilt default termination mechanism, the limit 100 protects it against any bug that can make it run indefinitely
+  /*  // the for loop has inbuilt default termination mechanism, the limit 100 protects it against any bug that can make it run indefinitely
 
     for (int step = 0; step < 100; ++step)  //creating for loop for continuous iteration & changes to the env state via agent
     {
@@ -192,11 +200,13 @@ int main()
              break;
         }
 
-    }
+    }*/ //old reactive architecture.
 
     std::queue<Position> frontier; //creating a queue object
 
     bool visited[3][3] = {}; //creating a primitive visited array that can track the bfs search discovery.
+
+    Position parent[3][3]; //adding a recorder for the bfs
 
     Position start = environment.observe();
 
@@ -204,10 +214,18 @@ int main()
 
     frontier.push(start);
 
-    while(!frontier.empty())  //putting bfs to action
+    bool goal_found = false;
+
+    while(!frontier.empty() && !goal_found)  //putting bfs to action
     {
 
        Position current = frontier.front();
+
+       frontier.pop();
+
+       std::cout << "BFS exploring: ("
+                 << current.horizontal << ", "
+                 << current.vertical << ")\n";
 
        std::vector<Action> actions =
        {
@@ -229,6 +247,16 @@ int main()
         {
 
             visited[next_state.horizontal][next_state.vertical] = true;
+
+            parent[next_state.horizontal][next_state.vertical] = current;
+
+            if (agent.isGoal(next_state))
+            {
+
+               goal_found = true;
+               break;
+            }
+
             frontier.push(next_state);
         }
 
@@ -236,7 +264,35 @@ int main()
 
     }
 
-    frontier.pop();
 
+   Position goal{2, 2};  //adding path reconstruction for the bfs
+
+   std::vector<Position> path;
+
+   Position current = goal;
+
+   while (current.horizontal != start.horizontal || current.vertical != start.vertical)
+   {
+
+          path.push_back(current);
+
+          current = parent[current.horizontal][current.vertical];
+   }
+
+   path.push_back(start);
+
+   std::reverse(path.begin(), path.end());
+
+   std::cout << "BFS Path:\n";
+
+   for (const Position& position : path)
+   {
+
+         std::cout << "("
+                   << position.horizontal
+                   << ", "
+                   << position.vertical
+                   << ")\n";
+   }
            return 0;
 }
