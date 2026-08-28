@@ -128,7 +128,6 @@ public:
     }
 };
 
-
 // Represents the agent that observes the environment and selects actions.
 class Agent
 {
@@ -171,12 +170,123 @@ public:
     }
   };
 
+class Planner  //BFS gets its own implementation component separately, away from main()
+{
+public:
+
+         std::vector<Position> bfs(Environment& environment, Agent& agent, Position start)
+         {
+
+                     std::queue<Position> frontier;
+
+                     bool visited[3][3] = {};
+
+                     Position parent[3][3];
+
+                     visited[start.horizontal][start.vertical] = true;
+
+                     frontier.push(start);
+
+                     bool goal_found = false;
+
+                     Position goal;
+
+                     while (!frontier.empty() && !goal_found)
+                     {
+
+                           Position current = frontier.front();
+                           frontier.pop();
+
+                           std::cout << "BFS exploring: ("
+                                     << current.horizontal << ", "
+                                     << current.vertical << ")\n";
+
+                           std::vector<Action> actions =
+                           {
+
+                                Action::MoveLeft,
+                                Action::MoveRight,
+                                Action::MoveUp,
+                                Action::MoveDown,
+                                Action::Wait
+                           };
+
+                           for (Action action : actions)
+                           {
+
+                                Position next_state;
+
+                                bool valid = environment.tryMove(current,action,next_state);
+
+                                if (valid && !visited[next_state.horizontal][next_state.vertical])
+                                {
+                                    visited[next_state.horizontal][next_state.vertical] = true;
+
+                                    parent[next_state.horizontal][next_state.vertical] = current;
+
+                                    if (agent.isGoal(next_state))
+                                    {
+
+                                        goal = next_state;
+
+                                        goal_found = true;
+                                        break;
+                                    }
+
+                                    frontier.push(next_state);
+                                }
+                            }
+                     }
+
+                     std::vector<Position> path;
+
+                     if (goal_found)
+                     {
+
+                         Position current = goal;
+
+                         while (current.horizontal != start.horizontal || current.vertical != start.vertical)
+                         {
+
+                                path.push_back(current);
+
+                                current = parent[current.horizontal][current.vertical];
+                         }
+
+                         path.push_back(start);
+
+                         std::reverse(path.begin(), path.end());
+                     }
+
+        return path;
+    }
+};
+
+
 int main()
 
     {
 
     Environment environment;
+
     Agent agent;
+
+    Planner planner;
+
+    Position start = environment.observe();
+
+    std::vector<Position> path = planner.bfs(environment, agent, start); //main() becomes orchestrator
+
+    std::cout << "Planned Path:\n";
+
+    for (const Position& position : path)
+    {
+        std::cout << "("
+                  << position.horizontal
+                  << ", "
+                  << position.vertical
+                  << ")\n";
+    }
 
   /*  // the for loop has inbuilt default termination mechanism, the limit 100 protects it against any bug that can make it run indefinitely
 
@@ -202,7 +312,7 @@ int main()
 
     }*/ //old reactive architecture.
 
-    std::queue<Position> frontier; //creating a queue object
+  /*  std::queue<Position> frontier; //creating a queue object
 
     bool visited[3][3] = {}; //creating a primitive visited array that can track the bfs search discovery.
 
@@ -281,7 +391,7 @@ int main()
 
    path.push_back(start);
 
-   std::reverse(path.begin(), path.end());
+   std::reverse(path.begin(), path.end()); 
 
    std::cout << "BFS Path:\n";
 
@@ -293,6 +403,6 @@ int main()
                    << ", "
                    << position.vertical
                    << ")\n";
-   }
+   }*/ //Old architecture decision of putting bfs inside the main()
            return 0;
 }
