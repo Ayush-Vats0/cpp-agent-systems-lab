@@ -165,9 +165,16 @@ public:
     }
 
     bool IsgoalReached(Position observation) const          //added a goal evaluation function to make the decision making explicit
-    { 
+    {
            return observation.horizontal == goal.horizontal && observation.vertical == goal.vertical; //independently goal reached state; termination
     }
+
+    bool execute(Environment& environment, Action action)
+    {
+        return environment.act(action);
+
+    }
+
   };
 
 class Planner  //BFS gets its own implementation component separately, away from main()
@@ -328,9 +335,24 @@ int main()
                   << ")\n";
     }
 
-    std::vector<Action> actions = planner.pathToActions(path);  //testing planner method to test the plan
+    std::vector<Action> actions = planner.pathToActions(path);  //testing planner method for the action plan derived by the bfs
 
-    std::cout << "Planned Actions:\n";
+    for (Action action : actions) //orchestrating the execution  of the planned action
+    {
+
+        bool success = agent.execute(environment, action);
+
+        if (!success)
+        {
+
+           std::cout << "Execution failed.\n";
+           break;
+
+        }
+
+    }
+
+  /*  std::cout << "Planned Actions:\n";
 
     for (Action action : actions)
     {
@@ -354,7 +376,7 @@ int main()
 
             std::cout << "Wait\n";
 
-     }
+     }*/ //testing block to test the planner's action plan for the path derived by the bfs
 
   /*  // the for loop has inbuilt default termination mechanism, the limit 100 protects it against any bug that can make it run indefinitely
 
