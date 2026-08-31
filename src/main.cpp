@@ -260,6 +260,46 @@ public:
 
         return path;
     }
+
+    std::vector<Action> pathToActions(const std::vector<Position>& path) //introducing a function for planner to handle path to execution planning as well
+    {
+        std::vector<Action> actions;
+
+            for (std::size_t i = 0; i + 1 < path.size(); ++i)
+                {
+                    Position current = path[i];
+
+                    Position next = path[i + 1];
+
+                    if (next.vertical > current.vertical)
+                    {
+
+                       actions.push_back(Action::MoveRight);
+
+                    }
+                    else if (next.vertical < current.vertical)
+                    {
+
+                       actions.push_back(Action::MoveLeft);
+
+                    }
+                    else if (next.horizontal > current.horizontal)
+                    {
+
+                       actions.push_back(Action::MoveDown);
+
+                    }
+                    else if (next.horizontal < current.horizontal)
+                    {
+
+                        actions.push_back(Action::MoveUp);
+
+                    }
+               }
+
+               return actions;
+
+     }
 };
 
 
@@ -287,6 +327,34 @@ int main()
                   << position.vertical
                   << ")\n";
     }
+
+    std::vector<Action> actions = planner.pathToActions(path);  //testing planner method to test the plan
+
+    std::cout << "Planned Actions:\n";
+
+    for (Action action : actions)
+    {
+        if (action == Action::MoveLeft)
+
+            std::cout << "MoveLeft\n";
+
+        else if (action == Action::MoveRight)
+
+            std::cout << "MoveRight\n";
+
+        else if (action == Action::MoveUp)
+
+            std::cout << "MoveUp\n";
+
+        else if (action == Action::MoveDown)
+
+            std::cout << "MoveDown\n";
+
+        else
+
+            std::cout << "Wait\n";
+
+     }
 
   /*  // the for loop has inbuilt default termination mechanism, the limit 100 protects it against any bug that can make it run indefinitely
 
