@@ -40,19 +40,19 @@ public:
 
          if (action == Action::MoveLeft)
          {
-             next_state.vertical--;
+             next_state.horizontal--;
          }
          else if (action == Action::MoveRight)
          {
-             next_state.vertical++;
+             next_state.horizontal++;
          }
          else if (action == Action::MoveUp)
          {
-             next_state.horizontal--;
+             next_state.vertical--;
          }
          else if (action == Action::MoveDown)
          {
-             next_state.horizontal++;
+             next_state.vertical++;
          }
          else if (action == Action::Wait)
          {
@@ -268,7 +268,7 @@ public:
         return path;
     }
 
-    std::vector<Action> pathToActions(const std::vector<Position>& path) //introducing a function for planner to handle path to execution planning as well
+    std::vector<Action> pathToActions(const std::vector<Position>& path) //// Convert the planned Position path into an executable Action sequence.
     {
         std::vector<Action> actions;
 
@@ -278,25 +278,25 @@ public:
 
                     Position next = path[i + 1];
 
-                    if (next.vertical > current.vertical)
+                    if (next.horizontal > current.horizontal)
                     {
 
                        actions.push_back(Action::MoveRight);
 
                     }
-                    else if (next.vertical < current.vertical)
+                    else if (next.horizontal < current.horizontal)
                     {
 
                        actions.push_back(Action::MoveLeft);
 
                     }
-                    else if (next.horizontal > current.horizontal)
+                    else if (next.vertical > current.vertical)
                     {
 
                        actions.push_back(Action::MoveDown);
 
                     }
-                    else if (next.horizontal < current.horizontal)
+                    else if (next.vertical < current.vertical)
                     {
 
                         actions.push_back(Action::MoveUp);
@@ -339,6 +339,19 @@ int main()
 
     for (Action action : actions) //orchestrating the execution  of the planned action
     {
+
+        std::cout << "Executing action: ";
+
+        if (action == Action::MoveLeft)
+            std::cout << "MoveLeft\n";
+        else if (action == Action::MoveRight)
+            std::cout << "MoveRight\n";
+        else if (action == Action::MoveUp)
+            std::cout << "MoveUp\n";
+        else if (action == Action::MoveDown)
+            std::cout << "MoveDown\n";
+        else
+           std::cout << "Wait\n";
 
         bool success = agent.execute(environment, action);
 
