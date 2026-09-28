@@ -126,6 +126,14 @@ public:
 
         return true;
     }
+
+    void disturb()  //added a temporary disturbance function to test agent's ability to detect divergence/anomaly when reality differs from expectations.
+    {
+
+       position.horizontal = 0;
+       position.vertical = 0;
+
+    }
 };
 
 // Represents the agent that observes the environment and selects actions.
@@ -437,6 +445,16 @@ int main()
 
            std::cout << "Execution failed.\n";
            break;
+
+        }
+
+        static bool disturbed = false;  //calling the disturb function to test agent's anomaly handling capability
+
+        if (!disturbed)
+        {
+
+           environment.disturb();
+           disturbed = true;
 
         }
 
