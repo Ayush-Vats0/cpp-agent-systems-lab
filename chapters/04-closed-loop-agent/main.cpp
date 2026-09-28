@@ -199,6 +199,13 @@ public:
 
     }
 
+    Position observe(Environment& environment)  //agent to observe env state
+    {
+
+        return environment.observe();
+
+    }
+
  };
 
 class Planner  //BFS gets its own implementation component separately, away from main()
@@ -412,6 +419,14 @@ int main()
            break;
 
         }
+
+        Position observation = agent.observe(environment);   //reporting the resulting state
+
+            std::cout << "Observed Position: ("
+                      << observation.horizontal
+                      << ", "
+                      << observation.vertical
+                      << ")\n";
 
         agent.advanceAction();
     }
