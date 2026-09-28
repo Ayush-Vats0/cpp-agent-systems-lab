@@ -206,6 +206,13 @@ public:
 
     }
 
+    bool evaluate(Position expected, Position observed)
+    {
+
+         return expected.horizontal == observed.horizontal && expected.vertical == observed.vertical;
+
+    }
+
  };
 
 class Planner  //BFS gets its own implementation component separately, away from main()
@@ -410,6 +417,19 @@ int main()
         else
            std::cout << "Wait\n";
 
+        Position current = agent.observe(environment);   //agent comparing expected state in env from the current state
+
+        Position expected;
+
+        bool prediction_valid = environment.tryMove(current, action, expected);
+
+        if (!prediction_valid)
+        {
+             std::cout << "Could not determine expected state.\n";
+             break;
+
+        }
+
         bool success = agent.execute(environment, action);
 
         if (!success)
@@ -427,6 +447,27 @@ int main()
                       << ", "
                       << observation.vertical
                       << ")\n";
+
+        bool evaluation = agent.evaluate(expected, observation);
+
+            std::cout << "Expected Position: ("
+                      << expected.horizontal
+                      << ", "
+                      << expected.vertical
+                      << ")\n";
+
+            std::cout << "Observed Position: ("
+                      << observation.horizontal
+                      << ", "
+                      << observation.vertical
+                      << ")\n";
+
+        if (!evaluation)
+        {
+            std::cout << "State mismatch. Plan may no longer be valid.\n";
+            break;
+
+       }
 
         agent.advanceAction();
     }
