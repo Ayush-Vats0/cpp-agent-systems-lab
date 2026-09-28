@@ -127,13 +127,13 @@ public:
         return true;
     }
 
-    void disturb()  //added a temporary disturbance function to test agent's ability to detect divergence/anomaly when reality differs from expectations.
+  /*  void disturb()  //added a temporary disturbance function to test agent's ability to detect divergence/anomaly when reality differs from expectations.
     {
 
        position.horizontal = 0;
        position.vertical = 0;
 
-    }
+    }*/ //commented out the disturb function as test was successful.
 };
 
 // Represents the agent that observes the environment and selects actions.
@@ -448,7 +448,7 @@ int main()
 
         }
 
-        static bool disturbed = false;  //calling the disturb function to test agent's anomaly handling capability
+        /*static bool disturbed = false;  //calling the disturb function to test agent's anomaly handling capability
 
         if (!disturbed)
         {
@@ -456,7 +456,7 @@ int main()
            environment.disturb();
            disturbed = true;
 
-        }
+        }*/ //commenting out the calling of disturb function as the agent is able to handle anomalies; this test was deterministic in nature.
 
         Position observation = agent.observe(environment);   //reporting the resulting state
 
