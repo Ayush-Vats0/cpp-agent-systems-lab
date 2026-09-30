@@ -142,7 +142,9 @@ class Agent
 private:
     Position goal {2, 2};   //agent's goal
 
-    std::size_t current_action = 0; //to index std::vector, first var to give agent some closed loop execution authority.
+    std::size_t current_action = 0; //to index std::vector, first var to give agent some closed loop execution authority
+
+    std::vector<Action> current_plan;
 
 public:
     // Receives an observation and decides what action should be taken.
@@ -186,10 +188,17 @@ public:
 
     }
 
-    Action getNextAction(const std::vector<Action>& plan)
+  /*  Action getNextAction(const std::vector<Action>& plan)
     {
 
          return plan[current_action]; //to get the index  of the action
+
+    }*/  //agent now owns the plan unlike before where main was owning the execution of the current plan
+
+    Action getNextAction() //agent owning the execution of the current plan
+    {
+
+        return current_plan[current_action];
 
     }
 
@@ -200,10 +209,17 @@ public:
 
     }
 
-    bool hasMoreActions(const std::vector<Action>& plan)
+   /* bool hasMoreActions(const std::vector<Action>& plan)
     {
 
          return current_action < plan.size();  //an interface to let any utiliser know if the agent has exhausted the action basket
+
+    }*/ //agent now owns the plan unlike before where main was owning the execution of the current plan
+
+    bool hasMoreActions() //agent owns the execution of the current plan
+    {
+
+         return current_action < current_plan.size();
 
     }
 
@@ -218,6 +234,14 @@ public:
     {
 
          return expected.horizontal == observed.horizontal && expected.vertical == observed.vertical;
+
+    }
+
+    void loadPlan(const std::vector<Action>& plan)
+    {
+
+         current_plan = plan;
+         current_action = 0;
 
     }
 
@@ -407,10 +431,12 @@ int main()
         std::cout << "MoveDown\n";
    }
 
-    while (agent.hasMoreActions(actions))
+    agent.loadPlan(actions); //testing load plan function
+
+    while (agent.hasMoreActions())
     {
 
-        Action action = agent.getNextAction(actions);
+        Action action = agent.getNextAction(); //removing actions as input parameter as main no longer owns the execution of the current plan
 
         std::cout << "Executing action: ";
 
