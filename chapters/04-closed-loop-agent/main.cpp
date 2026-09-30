@@ -251,6 +251,13 @@ class Planner  //BFS gets its own implementation component separately, away from
 {
 public:
 
+         std::vector<Position> plan(Environment& environment, Agent& agent, Position start) //establishing a control boundary between search algos like bfs and outside world
+         {
+
+                    return bfs(environment, agent, start);
+
+         }
+
          std::vector<Position> bfs(Environment& environment, Agent& agent, Position start)
          {
 
