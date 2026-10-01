@@ -399,7 +399,9 @@ int main()
 
     Position start = environment.observe();
 
-    std::vector<Position> path = planner.bfs(environment, agent, start); //main() becomes orchestrator
+    //std::vector<Position> path = planner.bfs(environment, agent, start); //main() becomes orchestrator
+
+    std::vector<Position> path = planner.plan(environment, agent, start); //further encapsulating the tasks, the  removing direct access to bfs/search algo from main.
 
     std::cout << "Planned Path:\n";
 
