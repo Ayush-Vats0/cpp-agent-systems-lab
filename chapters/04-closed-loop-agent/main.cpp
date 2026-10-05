@@ -247,14 +247,40 @@ public:
 
  };
 
+enum class PlanningStatus  //adding enum class planning status to give the ability of stating the meaning of the data output from planner class
+{
+         Success,
+         AlreadyAtGoal,
+         Failure,
+
+};
+
+struct PlanningResult //a successive block to work alongside enum Planning Status class
+{
+         PlanningStatus status;
+         std::vector<Position> path;
+
+};
+
 class Planner  //BFS gets its own implementation component separately, away from main()
 {
 public:
 
-         std::vector<Position> plan(Environment& environment, Agent& agent, Position start) //establishing a control boundary between search algos like bfs and outside world
-         {
+         PlanningResult plan(Environment& environment, Agent& agent, Position start) //changing the type decleration from simple vector to the struct type in order for planner to adapt to the providing meaing to its data output
 
-                    return bfs(environment, agent, start);
+        /* std::vector<Position> plan(Environment& environment, Agent& agent, Position start) //establishing a control boundary between search algos like bfs and outside world*/
+         {
+                   // return bfs(environment, agent, start); commenting out the old planner architecture as it doesnt align with the new planner architecture that prints the status/meaning of the task that produced a data output
+
+            std::vector<Position> path = bfs(environment, agent, start);
+
+            PlanningResult result;
+
+            result.status = PlanningStatus::Success;
+
+            result.path = path;
+
+            return result;   //added the new architecture doesnt send the bfs results directly to the outside world; rather it sends it to the struct result of the PlanningResult type.
 
          }
 
@@ -401,7 +427,11 @@ int main()
 
     //std::vector<Position> path = planner.bfs(environment, agent, start); //main() becomes orchestrator
 
-    std::vector<Position> path = planner.plan(environment, agent, start); //further encapsulating the tasks, the  removing direct access to bfs/search algo from main.
+      PlanningResult planning_result = planner.plan(environment, agent, start);//changing the return type from vector to struct for the new planner adaptation of printing the meaning as well along side the output data
+
+      std::vector<Position> path = planning_result.path; //explicitly extracting the path from the planner_result struct and feeding into the vector path so that the current execution pipeline remain unchanged.
+
+   /* std::vector<Position> path = planner.plan(environment, agent, start); //further encapsulating the tasks, the  removing direct access to bfs/search algo from main.*/
 
     std::cout << "Planned Path:\n";
 
