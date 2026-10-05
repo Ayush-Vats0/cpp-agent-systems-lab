@@ -272,9 +272,27 @@ public:
          {
                    // return bfs(environment, agent, start); commenting out the old planner architecture as it doesnt align with the new planner architecture that prints the status/meaning of the task that produced a data output
 
+            PlanningResult result;
+
+            if (agent.isGoal(start))
+            {
+
+               result.status = PlanningStatus::AlreadyAtGoal;
+
+               return result;
+
+            } //added the status output to stop planning if the agent is already at its goal and there is nothing search
+
             std::vector<Position> path = bfs(environment, agent, start);
 
-            PlanningResult result;
+            if (path.empty())
+            {
+
+               result.status = PlanningStatus::Failure;
+
+               return result;
+
+            } //added the status output when the search algorithm (in this case bfs) fails to produce a path
 
             result.status = PlanningStatus::Success;
 
