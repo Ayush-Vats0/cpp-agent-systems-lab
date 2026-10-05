@@ -445,7 +445,23 @@ int main()
 
     //std::vector<Position> path = planner.bfs(environment, agent, start); //main() becomes orchestrator
 
-      PlanningResult planning_result = planner.plan(environment, agent, start);//changing the return type from vector to struct for the new planner adaptation of printing the meaning as well along side the output data
+      PlanningResult planning_result = planner.plan(environment, agent, start);//changing the return type from vector to struct for the new planner adaptation of printing the meaning as well along side the output data 
+
+      if (planning_result.status == PlanningStatus::Failure)
+      {
+
+         std::cout << "Planning failed. No valid path was found.\n";
+         return 1;
+
+      } //main to inspect status before extracting the path from planner; if status failure, prorgam returns 1 hence failed
+
+      if (planning_result.status == PlanningStatus::AlreadyAtGoal)
+      {
+
+         std::cout << "Agent is already at the goal.\n";
+         return 0;
+
+      } //main to inspect if the bfs is already at the goal therefore, return 0, program successful as there is nothing more to search 
 
       std::vector<Position> path = planning_result.path; //explicitly extracting the path from the planner_result struct and feeding into the vector path so that the current execution pipeline remain unchanged.
 
