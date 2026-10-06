@@ -127,13 +127,13 @@ public:
         return true;
     }
 
-  /*  void disturb()  //added a temporary disturbance function to test agent's ability to detect divergence/anomaly when reality differs from expectations.
+   /*void disturb()  //added a temporary disturbance function to test agent's ability to detect divergence/anomaly when reality differs from expectations //reusing the disturb function to test the mismatch functionality of the planner class; that is if the mismatch attributes of planner class can work alongside agent's ability to detect divergence/anomaly
     {
 
        position.horizontal = 0;
        position.vertical = 0;
 
-    }*/ //commented out the disturb function as test was successful.
+    }*/ //commented out the disturb function as the mismatch test was successful //second test of controlled fault-injection setup for validating recovery was successful. 
 };
 
 // Represents the agent that observes the environment and selects actions.
@@ -547,7 +547,7 @@ int main()
 
         }
 
-        /*static bool disturbed = false;  //calling the disturb function to test agent's anomaly handling capability
+      /*  static bool disturbed = false;  //calling the disturb function to test agent's anomaly handling capability //calling the disturb function again to test the mismatch functionality of the planner class; that is if the mismatch attributes of planner class can work alongside agent's ability to detect divergence/anomaly
 
         if (!disturbed)
         {
@@ -555,7 +555,7 @@ int main()
            environment.disturb();
            disturbed = true;
 
-        }*/ //commenting out the calling of disturb function as the agent is able to handle anomalies; this test was deterministic in nature.
+        }*/ //commenting out the calling of disturb function as the agent is able to handle anomalies; this test was deterministic in nature. ////second test of controlled fault-injection setup for validating recovery was successful.
 
         Position observation = agent.observe(environment);   //reporting the resulting state
 
