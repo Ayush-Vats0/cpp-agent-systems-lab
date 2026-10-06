@@ -25,6 +25,7 @@ class Environment
 private:
     Position position {0, 0};    // The environment's internal state.
 
+  /*  bool failure_mode = false; //to test the failure attribute of the planner //test successful */
 public:
     Position observe() const
     {
@@ -61,21 +62,33 @@ public:
 
         //obstacle validation
 
-        if (next_state.horizontal < 0 ||
-            next_state.horizontal > 2 ||
-            next_state.vertical < 0 ||
-            next_state.vertical > 2)
-         {
+        if (next_state.horizontal < 0 || next_state.horizontal > 2 || next_state.vertical < 0 || next_state.vertical > 2)
+        {
 
              return false;
 
-         }
+        }
 
-       if (next_state.horizontal == 1 &&
-           next_state.vertical == 1)
-         {
+
+       if (next_state.horizontal == 1 && next_state.vertical == 1)
+       {
+
              return false;
-         }
+       }
+
+       /*if (failure_mode && next_state.horizontal == 1 && next_state.vertical == 2)  //testing failure attribute of the planner
+       {
+
+            return false;
+
+       }
+
+       if (failure_mode && next_state.horizontal == 2 && next_state.vertical == 1)
+       {
+
+           return false;
+
+       }*/ //failure test successful
 
        return true;
 
@@ -116,6 +129,20 @@ public:
           return false;
         }
 
+        /*if (failure_mode && new_position.horizontal == 1 && new_position.vertical == 2)  //testing failure attribute of the planner
+        {
+
+            return false;
+
+        }
+
+        if (failure_mode && new_position.horizontal == 2 && new_position.vertical == 1)
+        {
+ 
+            return false;
+
+        }*/ //failure test successful
+
         position = new_position;
 
         std::cout << "Position: ("
@@ -127,13 +154,23 @@ public:
         return true;
     }
 
-   /*void disturb()  //added a temporary disturbance function to test agent's ability to detect divergence/anomaly when reality differs from expectations //reusing the disturb function to test the mismatch functionality of the planner class; that is if the mismatch attributes of planner class can work alongside agent's ability to detect divergence/anomaly
+   /*void enableFailureMode() //to test Failure attribute of the planner
+   {
+
+      failure_mode = true;
+
+   }*/ // failure test successful
+
+   /*(void disturb()  //added a temporary disturbance function to test agent's ability to detect divergence/anomaly when reality differs from expectations //reusing the disturb function to test the mismatch functionality of the planner class; that is if the mismatch attributes of planner class can work alongside agent's ability to detect divergence/anomaly //changed the position.vertical to 2 to test if the system could run from a different position on the 2x2 grid when it encounters a disturbance at some random different position that altered the observed state from (0,0) to (0,2) on the grid //changing the position to (2,2) to test AlreadyAtGoal attribute of the planner //changing position to (2,0) for the 5th test to test failure attribute of the planner
     {
 
-       position.horizontal = 0;
+       position.horizontal = 2;
        position.vertical = 0;
 
-    }*/ //commented out the disturb function as the mismatch test was successful //second test of controlled fault-injection setup for validating recovery was successful. 
+       failure_mode = true; //to test failure attribute of the planner
+
+    } //commented out the disturb function as the mismatch test was successful //second test of controlled fault-injection setup for validating recovery was successful. //third test was successful where agent encountered a disturbance that altered the observed state from (0,0) to (0,2) //4th test was successfull where we tested ALreadyAtGoal attribute of the planner and that the system didnt run unwantedly when the agent found itself arbitarily at 2,2 //5th test to test failure attribute of the planner successful */
+
 };
 
 // Represents the agent that observes the environment and selects actions.
@@ -547,7 +584,7 @@ int main()
 
         }
 
-      /*  static bool disturbed = false;  //calling the disturb function to test agent's anomaly handling capability //calling the disturb function again to test the mismatch functionality of the planner class; that is if the mismatch attributes of planner class can work alongside agent's ability to detect divergence/anomaly
+       /*static bool disturbed = false;  //calling the disturb function to test agent's anomaly handling capability //calling the disturb function again to test the mismatch functionality of the planner class; that is if the mismatch attributes of planner class can work alongside agent's ability to detect divergence/anomaly //calling the disturb function for the third test where the observed state arbitarily becomes (0,2) instead of reverting back to (0,0) //calling the disturb function in the 4th test to test the AlreadyAtGoal attribute of the planner //calling the disturb function to test the Failure attribute of the planner in the 5th test
 
         if (!disturbed)
         {
@@ -555,7 +592,7 @@ int main()
            environment.disturb();
            disturbed = true;
 
-        }*/ //commenting out the calling of disturb function as the agent is able to handle anomalies; this test was deterministic in nature. ////second test of controlled fault-injection setup for validating recovery was successful.
+        } //commenting out the calling of disturb function as the agent is able to handle anomalies; this test was deterministic in nature. ////second test of controlled fault-injection setup for validating recovery was successful. //third test was successfull and system works even if the oberserved state is changed or disturbed to some arbitary position on the 2x2 grid //4th test was successful in testing AlreadyAtGoal attribute of the planner //5th test of testing failure attribute of the planner was successful */
 
         Position observation = agent.observe(environment);   //reporting the resulting state
 
@@ -582,11 +619,40 @@ int main()
         if (!evaluation)
         {
             std::cout << "State mismatch. Plan may no longer be valid.\n";
-            break;
+           // break; //commenting out break to provide the agent to handle disturbance.
+
+            PlanningResult replanning_result = planner.plan(environment, agent, observation); //after a mismatch the agent should resquest a new plan from planner
+            
+             if (replanning_result.status == PlanningStatus::Failure)  //handle replanning failure
+             {
+
+                std::cout << "Replanning failed. Agent cannot continue.\n";
+                break;
+
+             }
+
+             if (replanning_result.status == PlanningStatus::AlreadyAtGoal) //handle AlreadyAtGoal
+             {
+
+                std::cout << "Agent has already reached the goal.\n";
+                break;
+
+             }
+             
+             std::vector<Position> replanned_path = replanning_result.path;  //discarding the old plane and loading the new plan
+
+             std::vector<Action> replanned_actions = planner.pathToActions(replanned_path);
+
+             agent.loadPlan(replanned_actions);
+
+       }
+       else
+       {
+
+        agent.advanceAction();
 
        }
 
-        agent.advanceAction();
     }
 
   /*  std::cout << "Planned Actions:\n";
