@@ -496,7 +496,64 @@ public:
 
                 frontier.push({start, 0});
 
-               // Search loop will be added in the next step.
+               // adding search loop.
+
+                while (!frontier.empty())
+                {
+                       QueueEntry entry = frontier.top();
+
+                       frontier.pop();
+
+                       Position current = entry.state;
+
+                       int cost = entry.cost;
+
+                       if (cost != distance[current.horizontal][current.vertical])
+                       {
+
+                           continue;
+
+                       }
+                      
+                       if (agent.isGoal(current))
+                       {
+
+                          // Goal reached with its minimum cost.
+                          // Path reconstruction will be added next.
+
+                       }
+                       
+                       Action actions[] = {Action::MoveLeft, Action::MoveRight, Action::MoveUp, Action::MoveDown};
+
+                       for (Action action : actions)
+                       {
+
+                           Position next_state;
+
+                           if (!environment.tryMove(current, action, next_state))
+                           {
+
+                               continue;
+
+                           }
+
+                           int step_cost = environment.transitionCost(action);
+
+                           int candidate = cost + step_cost;
+
+                           if (candidate < distance[next_state.horizontal][next_state.vertical])
+                           {
+
+                              distance[next_state.horizontal][next_state.vertical] = candidate;
+
+                              parent[next_state.horizontal][next_state.vertical] = current;
+
+                              frontier.push({next_state, candidate});
+
+                           }
+
+                       }
+               }
 
                return {};
 
