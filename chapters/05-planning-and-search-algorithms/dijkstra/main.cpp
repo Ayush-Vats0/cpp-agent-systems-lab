@@ -363,7 +363,9 @@ public:
 
             } //added the status output to stop planning if the agent is already at its goal and there is nothing search
 
-            std::vector<Position> path = bfs(environment, agent, start);
+            //std::vector<Position> path = bfs(environment, agent, start); - commenting out bfs to replace it with dijkstra
+
+            std::vector<Position> path = dijkstra(environment, agent, start);
 
             if (path.empty())
             {
