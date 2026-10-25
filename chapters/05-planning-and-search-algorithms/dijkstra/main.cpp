@@ -519,7 +519,26 @@ public:
                        {
 
                           // Goal reached with its minimum cost.
-                          // Path reconstruction will be added next.
+                          // Path reconstruction added.
+
+                          std::vector<Position> path;
+
+                          Position state = current;
+
+                          while (state.horizontal != start.horizontal || state.vertical != start.vertical)
+                          {
+
+                                 path.push_back(state);
+
+                                state = parent[state.horizontal][state.vertical];
+
+                         }
+
+                         path.push_back(start);
+
+                         std::reverse(path.begin(), path.end());
+
+                         return path;
 
                        }
                        
