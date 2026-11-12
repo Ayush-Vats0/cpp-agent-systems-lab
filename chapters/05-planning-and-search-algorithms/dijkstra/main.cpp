@@ -5,6 +5,11 @@
 #include <limits>  // Provides numeric limits, including the largest int value.
 #include <utility> // Provides std::pair.
 
+//expanding the grid the both horizontally & vertically for dijsktra implementation
+constexpr int GRID_WIDTH = 5;
+
+constexpr int GRID_HEIGHT = 5;
+
 struct Position    //adding a structure to simulate planning in the agent and take the whole system to a 2D world
 {
     int horizontal;
@@ -62,14 +67,22 @@ public:
              // No change.
          }
 
-        //obstacle validation
+        //improvising env for dijkstra
 
-        if (next_state.horizontal < 0 || next_state.horizontal > 2 || next_state.vertical < 0 || next_state.vertical > 2)
+         if (next_state.horizontal < 0 || next_state.horizontal >= GRID_WIDTH || next_state.vertical < 0 || next_state.vertical >= GRID_HEIGHT)
+         {
+
+            return false;
+
+         }
+
+         //obstacle validation
+        /*if (next_state.horizontal < 0 || next_state.horizontal > 2 || next_state.vertical < 0 || next_state.vertical > 2)
         {
 
              return false;
 
-        }
+        }*/
 
 
        if (next_state.horizontal == 1 && next_state.vertical == 1)
@@ -97,7 +110,7 @@ public:
     }
 
     int transitionCost(Action action) const  //adding transition costs to the action for dijkstra search
-    { 
+    {
 
          if (action == Action::MoveLeft || action == Action::MoveRight)
          {
@@ -142,7 +155,7 @@ public:
                 // nothing
         }
 
-        if (new_position.horizontal < 0 || new_position.horizontal > 2 || new_position.vertical < 0 || new_position.vertical > 2)  //added the validation check for the obstacle
+        if (new_position.horizontal < 0 || new_position.horizontal > GRID_WIDTH || new_position.vertical < 0 || new_position.vertical > GRID_HEIGHT)  //added the validation check for the obstacle
         {
           return false;
         }
@@ -200,7 +213,7 @@ public:
 class Agent
 {
 private:
-    Position goal {2, 2};   //agent's goal
+    Position goal {4, 2};   //agent's goal
 
     std::size_t current_action = 0; //to index std::vector, first var to give agent some closed loop execution authority
 
@@ -230,10 +243,15 @@ public:
             return Action::Wait;        // choose wait and not a position || !(Otherwise choose action)
     }
 
-    bool isGoal(Position state)   //added a goal
+    /*bool isGoal(Position state)   //added a goal bfs
     {
              return state.horizontal == 2 &&
              state.vertical == 2;
+    }*/
+
+    bool isGoal(Position state) //improvised the goal for dijkstra
+    {
+           return state.horizontal == goal.horizontal && state.vertical == goal.vertical;
     }
 
     bool IsgoalReached(Position observation) const          //added a goal evaluation function to make the decision making explicit
@@ -389,9 +407,9 @@ public:
 
                      std::queue<Position> frontier;
 
-                     bool visited[3][3] = {};
+                     bool visited[GRID_WIDTH][GRID_HEIGHT] = {}; //replacing 3x3 in bfs as part of accomodating dijkstra and prevent compiler errors
 
-                     Position parent[3][3];
+                     Position parent[GRID_WIDTH][GRID_HEIGHT];
 
                      visited[start.horizontal][start.vertical] = true;
 
@@ -476,12 +494,12 @@ public:
 
                 const int INF = std::numeric_limits<int>::max();
 
-                int distance[3][3];
+                int distance[GRID_WIDTH][GRID_HEIGHT];
 
-                for (int h = 0; h < 3; ++h)
+                for (int h = 0; h < GRID_WIDTH; ++h)
                 {
 
-                     for (int v = 0; v < 3; ++v)
+                     for (int v = 0; v < GRID_HEIGHT; ++v)
                     {
 
                          distance[h][v] = INF;
@@ -490,7 +508,7 @@ public:
 
                 }
 
-                Position parent[3][3];
+                Position parent[GRID_WIDTH][GRID_HEIGHT];
 
                 std::priority_queue<QueueEntry,std::vector<QueueEntry>,CompareCost> frontier;
 
@@ -516,7 +534,7 @@ public:
                            continue;
 
                        }
-                      
+
                        if (agent.isGoal(current))
                        {
 
@@ -530,7 +548,7 @@ public:
                           while (state.horizontal != start.horizontal || state.vertical != start.vertical)
                           {
 
-                                 path.push_back(state);
+                                path.push_back(state);
 
                                 state = parent[state.horizontal][state.vertical];
 
@@ -543,7 +561,7 @@ public:
                          return path;
 
                        }
-                       
+
                        Action actions[] = {Action::MoveLeft, Action::MoveRight, Action::MoveUp, Action::MoveDown};
 
                        for (Action action : actions)
