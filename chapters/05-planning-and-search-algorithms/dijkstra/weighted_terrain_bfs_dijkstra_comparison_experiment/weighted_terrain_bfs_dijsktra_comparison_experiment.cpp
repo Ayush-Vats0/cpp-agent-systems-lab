@@ -1,0 +1,1046 @@
+#include <iostream> //Provides std::cout for writing text to standard output.
+#include <queue> //Provides std::queue for creatig queues.
+#include <vector> //helps storing values dynamically that are found by the bfs
+#include <algorithm> //to reverse the path provided by the recorder
+#include <limits>  // Provides numeric limits, including the largest int value.
+#include <utility> // Provides std::pair.
+
+//expanding the grid the both horizontally & vertically for dijsktra implementation
+constexpr int GRID_WIDTH = 5;
+
+constexpr int GRID_HEIGHT = 5;
+
+struct Position    //adding a structure to simulate planning in the agent and take the whole system to a 2D world
+{
+    int horizontal;
+    int vertical;
+};
+
+enum class Action      //making action type explicit
+{
+    MoveLeft,
+    MoveRight,
+    MoveUp,
+    MoveDown,
+    Wait
+};
+
+// Represents the environment in which our agent operates.
+
+class Environment
+{
+private:
+    Position position {0, 2};    // The environment's internal state.
+
+  /*  bool failure_mode = false; //to test the failure attribute of the planner //test successful */
+public:
+    Position observe() const
+    {
+        return position;    // Give the agent the current state as an observation.
+    }
+
+    bool tryMove(Position state, Action action, Position& next_state) //simulator to understand possibility by the agent
+    {
+
+         next_state = state;
+
+          //to  translate action into hypothetical movement
+
+         if (action == Action::MoveLeft)
+         {
+             next_state.horizontal--;
+         }
+         else if (action == Action::MoveRight)
+         {
+             next_state.horizontal++;
+         }
+         else if (action == Action::MoveUp)
+         {
+             next_state.vertical--;
+         }
+         else if (action == Action::MoveDown)
+         {
+             next_state.vertical++;
+         }
+         else if (action == Action::Wait)
+         {
+             // No change.
+         }
+
+        //improvising env for dijkstra
+
+         if (next_state.horizontal < 0 || next_state.horizontal >= GRID_WIDTH || next_state.vertical < 0 || next_state.vertical >= GRID_HEIGHT)
+         {
+
+            return false;
+
+         }
+
+         //obstacle validation
+        /*if (next_state.horizontal < 0 || next_state.horizontal > 2 || next_state.vertical < 0 || next_state.vertical > 2)
+        {
+
+             return false;
+
+        }*/
+
+
+       if (next_state.horizontal == 1 && next_state.vertical == 1)
+       {
+
+             return false;
+       }
+
+       /*if (failure_mode && next_state.horizontal == 1 && next_state.vertical == 2)  //testing failure attribute of the planner
+       {
+
+            return false;
+
+       }
+
+       if (failure_mode && next_state.horizontal == 2 && next_state.vertical == 1)
+       {
+
+           return false;
+
+       }*/ //failure test successful
+
+       return true;
+
+    }
+
+    /*int transitionCost(Action action) const  //adding transition costs to the action for dijkstra search
+    {
+
+         if (action == Action::MoveLeft || action == Action::MoveRight)
+         {
+
+             return 2;
+
+         }
+
+         else if (action == Action::MoveUp || action == Action::MoveDown)
+         {
+
+            return 1;
+
+         }
+
+            return 0;
+
+    }*/ //replacing transitioncost for dijsktra as part of the improvisation of env terrain
+
+    int transitionCost(Position destination) const
+    {
+        // Expensive terrain: entering these cells costs 10.
+        if (destination.vertical == 2 && (destination.horizontal == 1 || destination.horizontal == 2 || destination.horizontal == 3))
+        {
+            return 10;
+        }
+
+        // All other traversable terrain costs 1.
+            return 1;
+    }
+
+
+    bool act(Action action)
+    {
+        Position new_position = position;
+
+        if (action == Action::MoveLeft)    //Translating action into an environmental effect; env owns the interpretation of actions
+        {
+           new_position.horizontal--;
+        }
+        else if (action == Action::MoveRight)
+        {
+           new_position.horizontal++;
+        }
+        else if (action == Action::MoveUp)
+        {
+           new_position.vertical--;
+        }
+        else if (action == Action::MoveDown)
+        {
+           new_position.vertical++;
+        }
+        else if (action == Action::Wait)
+        {
+                // nothing
+        }
+
+        if (new_position.horizontal < 0 || new_position.horizontal >= GRID_WIDTH || new_position.vertical < 0 || new_position.vertical >= GRID_HEIGHT)
+        //added the validation check for the obstacle
+        {
+          return false;
+        }
+
+        if (new_position.horizontal == 1 && new_position.vertical == 1)     //introducting an obstacle to the environment so that the bot cant take invalid actions
+        {
+          return false;
+        }
+
+        /*if (failure_mode && new_position.horizontal == 1 && new_position.vertical == 2)  //testing failure attribute of the planner
+        {
+
+            return false;
+
+        }
+
+        if (failure_mode && new_position.horizontal == 2 && new_position.vertical == 1)
+        {
+
+            return false;
+
+        }*/ //failure test successful
+
+        position = new_position;
+
+        std::cout << "Position: ("
+          << position.horizontal
+          << ", "
+          << position.vertical
+          << ")\n";
+
+        return true;
+    }
+
+   /*void enableFailureMode() //to test Failure attribute of the planner
+   {
+
+      failure_mode = true;
+
+   }*/ // failure test successful
+
+   /*(void disturb()  //added a temporary disturbance function to test agent's ability to detect divergence/anomaly when reality differs from expectations //reusing the disturb function to test the mismatch functionality of the planner class; that is if the mismatch attributes of planner class can work alongside agent's ability to detect divergence/anomaly //changed the position.vertical to 2 to test if the system could run from a different position on the 2x2 grid when it encounters a disturbance at some random different position that altered the observed state from (0,0) to (0,2) on the grid //changing the position to (2,2) to test AlreadyAtGoal attribute of the planner //changing position to (2,0) for the 5th test to test failure attribute of the planner
+    {
+
+       position.horizontal = 2;
+       position.vertical = 0;
+
+       failure_mode = true; //to test failure attribute of the planner
+
+    } //commented out the disturb function as the mismatch test was successful //second test of controlled fault-injection setup for validating recovery was successful. //third test was successful where agent encountered a disturbance that altered the observed state from (0,0) to (0,2) //4th test was successfull where we tested ALreadyAtGoal attribute of the planner and that the system didnt run unwantedly when the agent found itself arbitarily at 2,2 //5th test to test failure attribute of the planner successful */
+
+};
+
+// Represents the agent that observes the environment and selects actions.
+class Agent
+{
+private:
+    Position goal {4, 2};   //agent's goal
+
+    std::size_t current_action = 0; //to index std::vector, first var to give agent some closed loop execution authority
+
+    std::vector<Action> current_plan;
+
+public:
+    // Receives an observation and decides what action should be taken.
+    Action decide(Position observation) const
+    {
+        if (observation.horizontal < goal.horizontal)    //agent now can choose from multiple actions from action space; agent now has current state + goal + decision policy; agent to select from action space
+        {
+            return Action::MoveRight;    // changeing action from simple integers to something concrete || !(If nothing special is observed, choose action 1)
+        }
+        else if (observation.horizontal > goal.horizontal)
+        {
+            return Action::MoveLeft;
+        }
+        else if (observation.vertical < goal.vertical)
+        {
+            return Action::MoveDown;
+        }
+        else if (observation.vertical > goal.vertical)
+        {
+            return Action::MoveUp;
+        }
+
+            return Action::Wait;        // choose wait and not a position || !(Otherwise choose action)
+    }
+
+    /*bool isGoal(Position state)   //added a goal bfs
+    {
+             return state.horizontal == 2 &&
+             state.vertical == 2;
+    }*/
+
+    bool isGoal(Position state) //improvised the goal for dijkstra
+    {
+           return state.horizontal == goal.horizontal && state.vertical == goal.vertical;
+    }
+
+    bool IsgoalReached(Position observation) const          //added a goal evaluation function to make the decision making explicit
+    {
+           return observation.horizontal == goal.horizontal && observation.vertical == goal.vertical; //independently goal reached state; termination
+    }
+
+    bool execute(Environment& environment, Action action)
+    {
+
+        return environment.act(action);
+
+    }
+
+  /*  Action getNextAction(const std::vector<Action>& plan)
+    {
+
+         return plan[current_action]; //to get the index  of the action
+
+    }*/  //agent now owns the plan unlike before where main was owning the execution of the current plan
+
+    Action getNextAction() //agent owning the execution of the current plan
+    {
+
+        return current_plan[current_action];
+
+    }
+
+    void advanceAction()
+    {
+
+         ++current_action; //to increment the current_action
+
+    }
+
+   /* bool hasMoreActions(const std::vector<Action>& plan)
+    {
+
+         return current_action < plan.size();  //an interface to let any utiliser know if the agent has exhausted the action basket
+
+    }*/ //agent now owns the plan unlike before where main was owning the execution of the current plan
+
+    bool hasMoreActions() //agent owns the execution of the current plan
+    {
+
+         return current_action < current_plan.size();
+
+    }
+
+    Position observe(Environment& environment)  //agent to observe env state
+    {
+
+        return environment.observe();
+
+    }
+
+    bool evaluate(Position expected, Position observed)
+    {
+
+         return expected.horizontal == observed.horizontal && expected.vertical == observed.vertical;
+
+    }
+
+    void loadPlan(const std::vector<Action>& plan)
+    {
+
+         current_plan = plan;
+         current_action = 0;
+
+    }
+
+ };
+
+enum class PlanningStatus  //adding enum class planning status to give the ability of stating the meaning of the data output from planner class
+{
+         Success,
+         AlreadyAtGoal,
+         Failure,
+
+};
+
+struct PlanningResult //a successive block to work alongside enum Planning Status class
+{
+         PlanningStatus status;
+         std::vector<Position> path;
+
+};
+
+struct QueueEntry  //defining priority queue entry for dijkstra search
+{
+
+    Position state;
+    int cost;
+
+};
+
+struct CompareCost //for creating a mini priority queue for dijkstra but configuring for dijkstra so that the smallest value comes out first
+{
+
+    bool operator()(const QueueEntry& left, const QueueEntry& right) const
+    {
+
+        return left.cost > right.cost;
+
+    }
+
+};
+
+class Planner  //now adding an structur for dijkstra //BFS gets its own implementation component separately, away from main()
+{
+public:
+
+         PlanningResult plan(Environment& environment, Agent& agent, Position start) //changing the type decleration from simple vector to the struct type in order for planner to adapt to the providing meaing to its data output
+
+        /* std::vector<Position> plan(Environment& environment, Agent& agent, Position start) //establishing a control boundary between search algos like bfs and outside world*/
+         {
+                   // return bfs(environment, agent, start); commenting out the old planner architecture as it doesnt align with the new planner architecture that prints the status/meaning of the task that produced a data output
+
+            PlanningResult result;
+
+            if (agent.isGoal(start))
+            {
+
+               result.status = PlanningStatus::AlreadyAtGoal;
+
+               return result;
+
+            } //added the status output to stop planning if the agent is already at its goal and there is nothing search
+
+            //std::vector<Position> path = bfs(environment, agent, start); - commenting out bfs to replace it with dijkstra
+
+            std::vector<Position> path = dijkstra(environment, agent, start);
+
+            if (path.empty())
+            {
+
+               result.status = PlanningStatus::Failure;
+
+               return result;
+
+            } //added the status output when the search algorithm (in this case bfs) fails to produce a path
+
+            result.status = PlanningStatus::Success;
+
+            result.path = path;
+
+            return result;   //added the new architecture doesnt send the bfs results directly to the outside world; rather it sends it to the struct result of the PlanningResult type.
+
+         }
+
+         std::vector<Position> bfs(Environment& environment, Agent& agent, Position start)
+         {
+
+                     std::queue<Position> frontier;
+
+                     bool visited[GRID_WIDTH][GRID_HEIGHT] = {}; //replacing 3x3 in bfs as part of accomodating dijkstra and prevent compiler errors
+
+                     Position parent[GRID_WIDTH][GRID_HEIGHT];
+
+                     visited[start.horizontal][start.vertical] = true;
+
+                     frontier.push(start);
+
+                     bool goal_found = false;
+
+                     Position goal;
+
+                     while (!frontier.empty() && !goal_found)
+                     {
+
+                           Position current = frontier.front();
+                           frontier.pop();
+
+                           std::cout << "BFS exploring: ("
+                                     << current.horizontal << ", "
+                                     << current.vertical << ")\n";
+
+                           std::vector<Action> actions =
+                           {
+
+                                Action::MoveLeft,
+                                Action::MoveRight,
+                                Action::MoveUp,
+                                Action::MoveDown,
+                                Action::Wait
+                           };
+
+                           for (Action action : actions)
+                           {
+
+                                Position next_state;
+
+                                bool valid = environment.tryMove(current,action,next_state);
+
+                                if (valid && !visited[next_state.horizontal][next_state.vertical])
+                                {
+                                    visited[next_state.horizontal][next_state.vertical] = true;
+
+                                    parent[next_state.horizontal][next_state.vertical] = current;
+
+                                    if (agent.isGoal(next_state))
+                                    {
+
+                                        goal = next_state;
+
+                                        goal_found = true;
+                                        break;
+                                    }
+
+                                    frontier.push(next_state);
+                                }
+                            }
+                     }
+
+                     std::vector<Position> path;
+
+                     if (goal_found)
+                     {
+
+                         Position current = goal;
+
+                         while (current.horizontal != start.horizontal || current.vertical != start.vertical)
+                         {
+
+                                path.push_back(current);
+
+                                current = parent[current.horizontal][current.vertical];
+                         }
+
+                         path.push_back(start);
+
+                         std::reverse(path.begin(), path.end());
+                     }
+
+        return path;
+    }
+
+    std::vector<Position> dijkstra(Environment& environment, Agent& agent, Position start) //adding code to run dijsktra search
+    {
+
+                const int INF = std::numeric_limits<int>::max();
+
+                int distance[GRID_WIDTH][GRID_HEIGHT];
+
+                for (int h = 0; h < GRID_WIDTH; ++h)
+                {
+
+                     for (int v = 0; v < GRID_HEIGHT; ++v)
+                    {
+
+                         distance[h][v] = INF;
+
+                    }
+
+                }
+
+                Position parent[GRID_WIDTH][GRID_HEIGHT];
+
+                std::priority_queue<QueueEntry,std::vector<QueueEntry>,CompareCost> frontier;
+
+                distance[start.horizontal][start.vertical] = 0;
+
+                frontier.push({start, 0});
+
+               // adding search loop.
+
+                while (!frontier.empty())
+                {
+                       QueueEntry entry = frontier.top();
+
+                       frontier.pop();
+
+                       Position current = entry.state;
+
+                       int cost = entry.cost;
+
+                       if (cost != distance[current.horizontal][current.vertical])
+                       {
+
+                           continue;
+
+                       }
+
+                       if (agent.isGoal(current))
+                       {
+
+                          // Goal reached with its minimum cost.
+                          // Path reconstruction added.
+
+                          std::vector<Position> path;
+
+                          Position state = current;
+
+                          while (state.horizontal != start.horizontal || state.vertical != start.vertical)
+                          {
+
+                                path.push_back(state);
+
+                                state = parent[state.horizontal][state.vertical];
+
+                         }
+
+                         path.push_back(start);
+
+                         std::reverse(path.begin(), path.end());
+
+                         return path;
+
+                       }
+
+                       Action actions[] = {Action::MoveLeft, Action::MoveRight, Action::MoveUp, Action::MoveDown};
+
+                       for (Action action : actions)
+                       {
+
+                           Position next_state;
+
+                           if (!environment.tryMove(current, action, next_state))
+                           {
+
+                               continue;
+
+                           }
+
+                           int step_cost = environment.transitionCost(next_state);
+
+                           int candidate = cost + step_cost;
+
+                           if (candidate < distance[next_state.horizontal][next_state.vertical])
+                           {
+
+                              distance[next_state.horizontal][next_state.vertical] = candidate;
+
+                              parent[next_state.horizontal][next_state.vertical] = current;
+
+                              frontier.push({next_state, candidate});
+
+                           }
+
+                       }
+               }
+
+               return {};
+
+    }
+
+    std::vector<Action> pathToActions(const std::vector<Position>& path) //// Convert the planned Position path into an executable Action sequence.
+    {
+        std::vector<Action> actions;
+
+            for (std::size_t i = 0; i + 1 < path.size(); ++i)
+                {
+                    Position current = path[i];
+
+                    Position next = path[i + 1];
+
+                    if (next.horizontal > current.horizontal)
+                    {
+
+                       actions.push_back(Action::MoveRight);
+
+                    }
+                    else if (next.horizontal < current.horizontal)
+                    {
+
+                       actions.push_back(Action::MoveLeft);
+
+                    }
+                    else if (next.vertical > current.vertical)
+                    {
+
+                       actions.push_back(Action::MoveDown);
+
+                    }
+                    else if (next.vertical < current.vertical)
+                    {
+
+                        actions.push_back(Action::MoveUp);
+
+                    }
+               }
+
+               return actions;
+
+     }
+};
+
+
+int main()
+
+    {
+
+    Environment environment;
+
+    Agent agent;
+
+    Planner planner;
+
+    Position start = environment.observe();
+
+    //std::vector<Position> path = planner.bfs(environment, agent, start); //main() becomes orchestrator
+
+    /* PlanningResult planning_result = planner.plan(environment, agent, start);//changing the return type from vector to struct for the new planner adaptation
+       of printing the meaning as well along side the output data
+
+      if (planning_result.status == PlanningStatus::Failure)
+      {
+
+         std::cout << "Planning failed. No valid path was found.\n";
+         return 1;
+
+      } //main to inspect status before extracting the path from planner; if status failure, prorgam returns 1 hence failed
+
+      if (planning_result.status == PlanningStatus::AlreadyAtGoal)
+      {
+
+         std::cout << "Agent is already at the goal.\n";
+         return 0;
+
+      } //main to inspect if the bfs is already at the goal therefore, return 0, program successful as there is nothing more to search
+
+      std::vector<Position> path = planning_result.path; //explicitly extracting the path from the planner_result struct and feeding into the vector path so that
+      the current execution pipeline remain unchanged.
+
+     // std::vector<Position> path = planner.plan(environment, agent, start); //further encapsulating the tasks,
+      the  removing direct access to bfs/search algo from main.*/ //replacing planning_result for a new call that compares bfs with dijkstra
+
+      // Run BFS independently.
+      std::vector<Position> bfs_path = planner.bfs(environment, agent, start);
+
+      // Run Dijkstra independently.
+      std::vector<Position> dijkstra_path = planner.dijkstra(environment, agent, start);
+
+      // Calculate the total terrain-entry cost of a path.
+      auto calculatePathCost = [&](const std::vector<Position>& path)
+      {
+           int total_cost = 0;
+
+           for (std::size_t i = 1; i < path.size(); ++i)
+           {
+               total_cost += environment.transitionCost(path[i]);
+           }
+
+               return total_cost;
+      };
+
+      // Print a path and its measurements.
+      auto printComparison = [&](const std::string& name, const std::vector<Position>& path)
+      {
+           std::cout << "\n" << name << " Path:\n";
+
+           for (const Position& position : path)
+           {
+                std::cout << "("
+                          << position.horizontal << ", "
+                          << position.vertical << ")\n";
+           }
+
+          if (path.empty())
+          {
+                std::cout << "No valid path found.\n";
+               return;
+          }
+
+               std::cout << "Movements: " << path.size() - 1 << "\n";
+               std::cout << "Total terrain cost: "
+                         << calculatePathCost(path) << "\n";
+      };
+
+      printComparison("BFS", bfs_path);
+
+      printComparison("Dijkstra", dijkstra_path);
+
+      // Select Dijkstra's path for the existing execution pipeline.
+      if (dijkstra_path.empty())
+      {
+         std::cout << "Dijkstra could not find a valid path.\n";
+         return 1;
+      }
+
+      std::vector<Position> path = dijkstra_path;
+
+
+      std::cout << "Planned Path:\n";
+
+      for (const Position& position : path)
+      {
+        std::cout << "("
+                  << position.horizontal
+                  << ", "
+                  << position.vertical
+                  << ")\n";
+     }
+
+    std::vector<Action> actions = planner.pathToActions(path);  //testing planner method for the action plan derived by the bfs
+
+    //for (Action action : actions) //orchestrating the execution  of the planned action
+
+    std::cout << "Generated Actions:\n";  //a block to printout the generated actions for debugging
+
+    for (Action action : actions)
+    {
+
+    if (action == Action::MoveLeft)
+
+        std::cout << "MoveLeft\n";
+
+    else if (action == Action::MoveRight)
+
+        std::cout << "MoveRight\n";
+
+    else if (action == Action::MoveUp)
+
+        std::cout << "MoveUp\n";
+
+    else if (action == Action::MoveDown)
+
+        std::cout << "MoveDown\n";
+   }
+
+    agent.loadPlan(actions); //testing load plan function
+
+    while (agent.hasMoreActions())
+    {
+
+        Action action = agent.getNextAction(); //removing actions as input parameter as main no longer owns the execution of the current plan
+
+        std::cout << "Executing action: ";
+
+        if (action == Action::MoveLeft)
+            std::cout << "MoveLeft\n";
+        else if (action == Action::MoveRight)
+            std::cout << "MoveRight\n";
+        else if (action == Action::MoveUp)
+            std::cout << "MoveUp\n";
+        else if (action == Action::MoveDown)
+            std::cout << "MoveDown\n";
+        else
+           std::cout << "Wait\n";
+
+        Position current = agent.observe(environment);   //agent comparing expected state in env from the current state
+
+        Position expected;
+
+        bool prediction_valid = environment.tryMove(current, action, expected);
+
+        if (!prediction_valid)
+        {
+             std::cout << "Could not determine expected state.\n";
+             break;
+
+        }
+
+        bool success = agent.execute(environment, action);
+
+        if (!success)
+        {
+
+           std::cout << "Execution failed.\n";
+           break;
+
+        }
+
+       /*static bool disturbed = false;  //calling the disturb function to test agent's anomaly handling capability //calling the disturb function again to test the mismatch functionality of the planner class; that is if the mismatch attributes of planner class can work alongside agent's ability to detect divergence/anomaly //calling the disturb function for the third test where the observed state arbitarily becomes (0,2) instead of reverting back to (0,0) //calling the disturb function in the 4th test to test the AlreadyAtGoal attribute of the planner //calling the disturb function to test the Failure attribute of the planner in the 5th test
+
+        if (!disturbed)
+        {
+
+           environment.disturb();
+           disturbed = true;
+
+        } //commenting out the calling of disturb function as the agent is able to handle anomalies; this test was deterministic in nature. ////second test of controlled fault-injection setup for validating recovery was successful. //third test was successfull and system works even if the oberserved state is changed or disturbed to some arbitary position on the 2x2 grid //4th test was successful in testing AlreadyAtGoal attribute of the planner //5th test of testing failure attribute of the planner was successful */
+
+        Position observation = agent.observe(environment);   //reporting the resulting state
+
+            std::cout << "Observed Position: ("
+                      << observation.horizontal
+                      << ", "
+                      << observation.vertical
+                      << ")\n";
+
+        bool evaluation = agent.evaluate(expected, observation);
+
+            std::cout << "Expected Position: ("
+                      << expected.horizontal
+                      << ", "
+                      << expected.vertical
+                      << ")\n";
+
+            std::cout << "Observed Position: ("
+                      << observation.horizontal
+                      << ", "
+                      << observation.vertical
+                      << ")\n";
+
+        if (!evaluation)
+        {
+            std::cout << "State mismatch. Plan may no longer be valid.\n";
+           // break; //commenting out break to provide the agent to handle disturbance.
+
+            PlanningResult replanning_result = planner.plan(environment, agent, observation); //after a mismatch the agent should resquest a new plan from planner
+
+             if (replanning_result.status == PlanningStatus::Failure)  //handle replanning failure
+             {
+
+                std::cout << "Replanning failed. Agent cannot continue.\n";
+                break;
+
+             }
+
+             if (replanning_result.status == PlanningStatus::AlreadyAtGoal) //handle AlreadyAtGoal
+             {
+
+                std::cout << "Agent has already reached the goal.\n";
+                break;
+
+             }
+
+             std::vector<Position> replanned_path = replanning_result.path;  //discarding the old plane and loading the new plan
+
+             std::vector<Action> replanned_actions = planner.pathToActions(replanned_path);
+
+             agent.loadPlan(replanned_actions);
+
+       }
+       else
+       {
+
+        agent.advanceAction();
+
+       }
+
+    }
+
+  /*  std::cout << "Planned Actions:\n";
+
+    for (Action action : actions)
+    {
+        if (action == Action::MoveLeft)
+
+            std::cout << "MoveLeft\n";
+
+        else if (action == Action::MoveRight)
+
+            std::cout << "MoveRight\n";
+
+        else if (action == Action::MoveUp)
+
+            std::cout << "MoveUp\n";
+
+        else if (action == Action::MoveDown)
+
+            std::cout << "MoveDown\n";
+
+        else
+
+            std::cout << "Wait\n";
+
+     }*/ //testing block to test the planner's action plan for the path derived by the bfs
+
+  /*  // the for loop has inbuilt default termination mechanism, the limit 100 protects it against any bug that can make it run indefinitely
+
+    for (int step = 0; step < 100; ++step)  //creating for loop for continuous iteration & changes to the env state via agent
+    {
+        Position observation = environment.observe();
+
+        if (agent.IsgoalReached(observation))
+        {
+           std::cout << "Goal Reached!\n";          //goal evaluation break
+           break;
+        }
+
+        Action action = agent.decide(observation);   //changing int to conrete definable action in this iteration
+
+        bool action_sucess = environment.act(action);    //changing the orchestration of the agent's actions to deal with an environmental constrain
+
+        if (!action_sucess)
+        {
+             std::cout << "Action failed, Goal cannot be reached.\n";
+             break;
+        }
+
+    }*/ //old reactive architecture.
+
+  /*  std::queue<Position> frontier; //creating a queue object
+
+    bool visited[3][3] = {}; //creating a primitive visited array that can track the bfs search discovery.
+
+    Position parent[3][3]; //adding a recorder for the bfs
+
+    Position start = environment.observe();
+
+    visited[start.horizontal][start.vertical] = true;
+
+    frontier.push(start);
+
+    bool goal_found = false;
+
+    while(!frontier.empty() && !goal_found)  //putting bfs to action
+    {
+
+       Position current = frontier.front();
+
+       frontier.pop();
+
+       std::cout << "BFS exploring: ("
+                 << current.horizontal << ", "
+                 << current.vertical << ")\n";
+
+       std::vector<Action> actions =
+       {
+         Action::MoveLeft,
+         Action::MoveRight,
+         Action::MoveUp,
+         Action::MoveDown,
+         Action::Wait
+      };
+
+     for (Action action : actions)
+     {
+
+         Position next_state;
+
+         bool valid = environment.tryMove(current, action, next_state);
+
+        if (valid && !visited[next_state.horizontal][next_state.vertical])
+        {
+
+            visited[next_state.horizontal][next_state.vertical] = true;
+
+            parent[next_state.horizontal][next_state.vertical] = current;
+
+            if (agent.isGoal(next_state))
+            {
+
+               goal_found = true;
+               break;
+            }
+
+            frontier.push(next_state);
+        }
+
+      }
+
+    }
+
+
+   Position goal{2, 2};  //adding path reconstruction for the bfs
+
+   std::vector<Position> path;
+
+   Position current = goal;
+
+   while (current.horizontal != start.horizontal || current.vertical != start.vertical)
+   {
+
+          path.push_back(current);
+
+          current = parent[current.horizontal][current.vertical];
+   }
+
+   path.push_back(start);
+
+   std::reverse(path.begin(), path.end());
+
+   std::cout << "BFS Path:\n";
+
+   for (const Position& position : path)
+   {
+
+         std::cout << "("
+                   << position.horizontal
+                   << ", "
+                   << position.vertical
+                   << ")\n";
+   }*/ //Old architecture decision of putting bfs inside the main()
+           return 0;
+}

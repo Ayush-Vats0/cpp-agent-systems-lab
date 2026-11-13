@@ -30,7 +30,7 @@ enum class Action      //making action type explicit
 class Environment
 {
 private:
-    Position position {0, 0};    // The environment's internal state.
+    Position position {0, 2};    // The environment's internal state.
 
   /*  bool failure_mode = false; //to test the failure attribute of the planner //test successful */
 public:
@@ -109,7 +109,7 @@ public:
 
     }
 
-    int transitionCost(Action action) const  //adding transition costs to the action for dijkstra search
+    /*int transitionCost(Action action) const  //adding transition costs to the action for dijkstra search
     {
 
          if (action == Action::MoveLeft || action == Action::MoveRight)
@@ -128,7 +128,20 @@ public:
 
             return 0;
 
+    }*/ //replacing transitioncost for dijsktra as part of the improvisation of env terrain
+
+    int transitionCost(Position destination) const
+    {
+        // Expensive terrain: entering these cells costs 10.
+        if (destination.vertical == 2 && (destination.horizontal == 1 || destination.horizontal == 2 || destination.horizontal == 3))
+        {
+            return 10;
+        }
+
+        // All other traversable terrain costs 1.
+            return 1;
     }
+
 
     bool act(Action action)
     {
@@ -155,7 +168,8 @@ public:
                 // nothing
         }
 
-        if (new_position.horizontal < 0 || new_position.horizontal > GRID_WIDTH || new_position.vertical < 0 || new_position.vertical > GRID_HEIGHT)  //added the validation check for the obstacle
+        if (new_position.horizontal < 0 || new_position.horizontal >= GRID_WIDTH || new_position.vertical < 0 || new_position.vertical >= GRID_HEIGHT)
+        //added the validation check for the obstacle
         {
           return false;
         }
@@ -174,7 +188,7 @@ public:
 
         if (failure_mode && new_position.horizontal == 2 && new_position.vertical == 1)
         {
- 
+
             return false;
 
         }*/ //failure test successful
@@ -576,7 +590,7 @@ public:
 
                            }
 
-                           int step_cost = environment.transitionCost(action);
+                           int step_cost = environment.transitionCost(next_state);
 
                            int candidate = cost + step_cost;
 
@@ -654,7 +668,8 @@ int main()
 
     //std::vector<Position> path = planner.bfs(environment, agent, start); //main() becomes orchestrator
 
-      PlanningResult planning_result = planner.plan(environment, agent, start);//changing the return type from vector to struct for the new planner adaptation of printing the meaning as well along side the output data 
+    /* PlanningResult planning_result = planner.plan(environment, agent, start);//changing the return type from vector to struct for the new planner adaptation
+       of printing the meaning as well along side the output data
 
       if (planning_result.status == PlanningStatus::Failure)
       {
@@ -670,22 +685,80 @@ int main()
          std::cout << "Agent is already at the goal.\n";
          return 0;
 
-      } //main to inspect if the bfs is already at the goal therefore, return 0, program successful as there is nothing more to search 
+      } //main to inspect if the bfs is already at the goal therefore, return 0, program successful as there is nothing more to search
 
-      std::vector<Position> path = planning_result.path; //explicitly extracting the path from the planner_result struct and feeding into the vector path so that the current execution pipeline remain unchanged.
+      std::vector<Position> path = planning_result.path; //explicitly extracting the path from the planner_result struct and feeding into the vector path so that
+      the current execution pipeline remain unchanged.
 
-   /* std::vector<Position> path = planner.plan(environment, agent, start); //further encapsulating the tasks, the  removing direct access to bfs/search algo from main.*/
+     // std::vector<Position> path = planner.plan(environment, agent, start); //further encapsulating the tasks,
+      the  removing direct access to bfs/search algo from main.*/ //replacing planning_result for a new call that compares bfs with dijkstra
 
-    std::cout << "Planned Path:\n";
+      // Run BFS independently.
+      std::vector<Position> bfs_path = planner.bfs(environment, agent, start);
 
-    for (const Position& position : path)
-    {
+      // Run Dijkstra independently.
+      std::vector<Position> dijkstra_path = planner.dijkstra(environment, agent, start);
+
+      // Calculate the total terrain-entry cost of a path.
+      auto calculatePathCost = [&](const std::vector<Position>& path)
+      {
+           int total_cost = 0;
+
+           for (std::size_t i = 1; i < path.size(); ++i)
+           {
+               total_cost += environment.transitionCost(path[i]);
+           }
+
+               return total_cost;
+      };
+
+      // Print a path and its measurements.
+      auto printComparison = [&](const std::string& name, const std::vector<Position>& path)
+      {
+           std::cout << "\n" << name << " Path:\n";
+
+           for (const Position& position : path)
+           {
+                std::cout << "("
+                          << position.horizontal << ", "
+                          << position.vertical << ")\n";
+           }
+
+          if (path.empty())
+          {
+                std::cout << "No valid path found.\n";
+               return;
+          }
+
+               std::cout << "Movements: " << path.size() - 1 << "\n";
+               std::cout << "Total terrain cost: "
+                         << calculatePathCost(path) << "\n";
+      };
+
+      printComparison("BFS", bfs_path);
+
+      printComparison("Dijkstra", dijkstra_path);
+
+      // Select Dijkstra's path for the existing execution pipeline.
+      if (dijkstra_path.empty())
+      {
+         std::cout << "Dijkstra could not find a valid path.\n";
+         return 1;
+      }
+
+      std::vector<Position> path = dijkstra_path;
+
+
+      std::cout << "Planned Path:\n";
+
+      for (const Position& position : path)
+      {
         std::cout << "("
                   << position.horizontal
                   << ", "
                   << position.vertical
                   << ")\n";
-    }
+     }
 
     std::vector<Action> actions = planner.pathToActions(path);  //testing planner method for the action plan derived by the bfs
 
@@ -794,7 +867,7 @@ int main()
            // break; //commenting out break to provide the agent to handle disturbance.
 
             PlanningResult replanning_result = planner.plan(environment, agent, observation); //after a mismatch the agent should resquest a new plan from planner
-            
+
              if (replanning_result.status == PlanningStatus::Failure)  //handle replanning failure
              {
 
@@ -810,7 +883,7 @@ int main()
                 break;
 
              }
-             
+
              std::vector<Position> replanned_path = replanning_result.path;  //discarding the old plane and loading the new plan
 
              std::vector<Action> replanned_actions = planner.pathToActions(replanned_path);
