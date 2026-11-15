@@ -1,9 +1,32 @@
+/*
+===============================================================================
+Project     : C++ Agent Systems: Foundations & Experiments
+Author      : Ayush Vats
+GitHub      : Ayush-Vats0
+Contact     : 90127732+Ayush-Vats0@users.noreply.github.com
+
+AI Assistance: ChatGPT (GPT-6)
+
+Collaboration: Human-directed engineering with AI-assisted design, technical guidance, implementation support, debugging and review.
+
+Focus       : AI Agent Systems Engineering
+Chapter     : Chapter 05 — Dijkstra
+Section     : Experiments
+Sub-Section : Unreachable Goal
+Experiment  : Unreachable Goal Experiment
+
+This is an independent project and is not an official OpenAI product,
+endorsement, or partnership.
+===============================================================================
+*/
+
 #include <iostream> //Provides std::cout for writing text to standard output.
 #include <queue> //Provides std::queue for creatig queues.
 #include <vector> //helps storing values dynamically that are found by the bfs
 #include <algorithm> //to reverse the path provided by the recorder
 #include <limits>  // Provides numeric limits, including the largest int value.
 #include <utility> // Provides std::pair.
+#include "project_banner.hpp"
 
 //expanding the grid the both horizontally & vertically for dijsktra implementation
 constexpr int GRID_WIDTH = 5;
@@ -671,6 +694,8 @@ public:
 int main()
 
     {
+
+    printProjectBanner();
 
     Environment environment;
 

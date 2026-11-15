@@ -1,7 +1,29 @@
+/*
+===============================================================================
+Project     : C++ Agent Systems: Foundations & Experiments
+Author      : Ayush Vats
+GitHub      : Ayush-Vats0
+Contact     : 90127732+Ayush-Vats0@users.noreply.github.com
+
+AI Assistance: ChatGPT (GPT-6)
+
+Collaboration: Human-directed engineering with AI-assisted design, technical guidance, implementation support, debugging and review.
+
+Focus       : AI Agent Systems Engineering
+Chapter     : Chapter 04 — Closed Loop Agent
+Section     : Experiments
+Experiment  : Main Planner Failure
+
+This is an independent project and is not an official OpenAI product,
+endorsement, or partnership.
+===============================================================================
+*/
+
 #include <iostream> //Provides std::cout for writing text to standard output.
 #include <queue> //Provides std::queue for creatig queues.
 #include <vector> //helps storing values dynamically that are found by the bfs
 #include <algorithm> //to reverse the path provided by the recorder
+#include "project_banner.hpp"
 
 struct Position    //adding a structure to simulate planning in the agent and take the whole system to a 2D world
 {
@@ -470,6 +492,8 @@ public:
 int main()
 
     {
+
+    printProjectBanner();
 
     Environment environment;
 
